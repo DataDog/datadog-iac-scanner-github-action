@@ -21,6 +21,14 @@ inputs:
     description: 'A list of directories or files that the scan should be limited to. The list is comma-delimited. For example: "src" or "src,tests/file1.go".'
     required: false
     default: "."
+  extra_args:
+    description: "Extra arguments to be passed to the `datadog-iac-scanner scan` command."
+    required: false
+    default: ""
+  datadog_ci_extra_args:
+    description: "Extra arguments to be passed to the `datadog-ci sarif upload` command."
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -106,6 +114,7 @@ runs:
         DD_APP_KEY: ${{ inputs.dd_app_key }}
         DD_SITE: ${{ inputs.dd_site }}
         SCAN_PATHS: ${{ inputs.paths }}
+        EXTRA_ARGS: ${{ inputs.extra_args }}
       run: |
         # Run Infrastructure as Code scan
         cd "${GITHUB_WORKSPACE}"
@@ -115,10 +124,12 @@ runs:
         echo "Starting IaC Scan"
         (
           set +e
+          # shellcheck disable=SC2086 -- intentional: $EXTRA_ARGS is unquoted to allow multiple values
           datadog-iac-scanner scan \
             --path "${SCAN_PATHS}" \
             --output-path "${OUTPUT_PATH}" \
-            --output-name "${OUTPUT_NAME}"
+            --output-name "${OUTPUT_NAME}" \
+            $EXTRA_ARGS
           exit_code="$?"
           if [ "${exit_code}" -gt "60" ] ; then
             echo "::error title=Datadog IaC Scanner failure::DataDog IaC Scanner exited with code ${exit_code}"
@@ -134,9 +145,11 @@ runs:
         DD_API_KEY: ${{ inputs.dd_api_key }}
         DD_APP_KEY: ${{ inputs.dd_app_key }}
         DD_SITE: ${{ inputs.dd_site }}
+        EXTRA_ARGS: ${{ inputs.datadog_ci_extra_args }}
       run: |
         # Upload analysis results to Datadog
         cd "${GITHUB_WORKSPACE}"
         echo "Uploading analysis results to Datadog"
-        datadog-ci sarif upload "${OUTPUT_FILE}" --service datadog-static-analyzer --env ci
+        # shellcheck disable=SC2086 -- intentional: $EXTRA_ARGS is unquoted to allow multiple values
+        datadog-ci sarif upload "${OUTPUT_FILE}" --service datadog-static-analyzer --env ci $EXTRA_ARGS
         echo "Done"

@@ -44,13 +44,15 @@ jobs:
 
 ## Inputs
 
-| Name         | Description                                                                                                          | Required | Default         |
-| ------------ | -------------------------------------------------------------------------------------------------------------------- | -------- | --------------- |
-| `dd_api_key` | Your Datadog API key. This key is created by your [Datadog organization] and should be stored as a [secret].         | Yes      |                 |
-| `dd_api_key` | Your Datadog application key. This key is created by your [Datadog organization] and should be stored as a [secret]. | Yes      |                 |
-| `dd_app_key` | Datadog application key.                                                                                             | Yes      |                 |
-| `dd_site`    | The [Datadog site] to upload the results to.                                                                         | No       | `datadoghq.com` |
-| `paths`      | A comma-separated list of directories or files to scan.                                                              | No       | `.`             |
+| Name                    | Description                                                                                                          | Required | Default         |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | --------------- |
+| `dd_api_key`            | Your Datadog API key. This key is created by your [Datadog organization] and should be stored as a [secret].         | Yes      |                 |
+| `dd_api_key`            | Your Datadog application key. This key is created by your [Datadog organization] and should be stored as a [secret]. | Yes      |                 |
+| `dd_app_key`            | Datadog application key.                                                                                             | Yes      |                 |
+| `dd_site`               | The [Datadog site] to upload the results to.                                                                         | No       | `datadoghq.com` |
+| `paths`                 | A comma-separated list of directories or files to scan.                                                              | No       | `.`             |
+| `extra_args`            | Extra arguments to be passed to the `datadog-iac-scanner scan` command.                                              | No       |                 |
+| `datadog_ci_extra_args` | Extra arguments to be passed to the `datadog-ci sarif upload` command.                                               | No       |                 |
 
 ## Supported platforms
 
