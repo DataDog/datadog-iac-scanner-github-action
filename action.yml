@@ -1,0 +1,142 @@
+name: "Datadog IaC Scanner"
+description: "Run a Datadog Infrastructure as Code scan in your Github Action workflows"
+author: "Datadog"
+branding:
+  icon: 'check'
+  color: 'purple'
+inputs:
+  dd_api_key:
+    description: "Your Datadog API key used to authenticate requests."
+    required: true
+    default: ""
+  dd_app_key:
+    description: "Your Datadog Application key used to authenticate requests."
+    required: true
+    default: ""
+  dd_site:
+    description: "The Datadog site. For example, users in the EU may want to set datadoghq.eu."
+    required: false
+    default: "datadoghq.com"
+  paths:
+    description: 'A list of directories or files that the scan should be limited to. The list is comma-delimited. For example: "src" or "src,tests/file1.go".'
+    required: false
+    default: "."
+runs:
+  using: "composite"
+  steps:
+    - name: Set up environment
+      shell: bash
+      env:
+        DD_API_KEY: ${{ inputs.dd_api_key }}
+        DD_APP_KEY: ${{ inputs.dd_app_key }}
+      run: |
+        # Set up environment
+        if [ -z "${DD_API_KEY}" ]; then
+          echo "::error title=Missing credentials::dd_api_key must be set"
+          exit 1
+        fi
+        if [ -z "${DD_APP_KEY}" ]; then
+          echo "::error title=Missing credentials::dd_app_key must be set"
+          exit 1
+        fi
+
+        case "${{ runner.arch }}" in
+          X64)
+            DDIS_ARCH="amd64"
+            ;;
+          ARM64)
+            DDIS_ARCH="arm64"
+            ;;
+          *)
+            echo "::error title=Unsupported architecture::this action does not support ${{ runner.arch }}"
+            exit 1
+            ;;
+        esac
+
+        if [ "${{ runner.os }}" = "macOS" ]; then
+          DDIS_OS="darwin"
+          DDIS_SUFFIX="tar.gz"
+        elif [ "${{ runner.os }}" = "Windows" ] && [ "${DDIS_ARCH}" = "amd64" ]; then
+          DDIS_OS="windows"
+          DDIS_SUFFIX="zip"
+        elif [ "${{ runner.os }}" = "Linux" ]; then
+          DDIS_OS="linux"
+          DDIS_SUFFIX="tar.gz"
+        else
+          echo "::error title=Unsupported platform::this action does not support ${{ runner.os }}/${{ runner.arch }}"
+          exit 1
+        fi
+        echo "DDIS_ARCH=${DDIS_ARCH}" >> "${GITHUB_ENV}"
+        echo "DDIS_OS=${DDIS_OS}" >> "${GITHUB_ENV}"
+        echo "DDIS_SUFFIX=${DDIS_SUFFIX}" >> "${GITHUB_ENV}"
+
+        mkdir -p "${HOME}/.local/bin"
+        echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+
+        git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
+    - name: Install datadog-ci
+      uses: DataDog/install-datadog-ci-github-action@98c95d7bdec247037323729fe6b4cc1d050c7e28 # v1.0.1
+
+    - name: Install datadog-iac-scanner
+      shell: bash
+      run: |
+        # Install datadog-iac-scanner
+        TIMEFORMAT='Installed datadog-iac-scanner in %1Rs'
+        time {
+          release_url="https://api.github.com/repos/DataDog/datadog-iac-scanner/releases/latest"
+          suffix="_${DDIS_OS}_${DDIS_ARCH}.${DDIS_SUFFIX}"
+          url="$( curl -fsSL --retry 5 "${release_url}" | jq -r ".assets[] | select(.name | endswith(\"${suffix}\")).browser_download_url" )"
+          echo "Downloading from ${url}"
+          tmpdir="$(mktemp -d)"
+          filename="${tmpdir}/datadog-iac-scanner${suffix}"
+          curl -fsSL --retry 5 ${url} -o "${filename}"
+          if [ "${DDIS_SUFFIX}" = "zip" ] ; then
+            unzip -q "${filename}" -d "${HOME}/.local/bin"
+          else
+            tar xfz "${filename}" -C "${HOME}/.local/bin"
+          fi
+          chmod +x "${HOME}/.local/bin/datadog-iac-scanner"
+        }
+
+    - name: Run Infrastructure as Code scan
+      shell: bash
+      env:
+        DD_API_KEY: ${{ inputs.dd_api_key }}
+        DD_APP_KEY: ${{ inputs.dd_app_key }}
+        DD_SITE: ${{ inputs.dd_site }}
+        SCAN_PATHS: ${{ inputs.paths }}
+      run: |
+        # Run Infrastructure as Code scan
+        cd "${GITHUB_WORKSPACE}"
+        OUTPUT_PATH="$(mktemp -d)"
+        OUTPUT_NAME="output.sarif"
+
+        echo "Starting IaC Scan"
+        (
+          set +e
+          datadog-iac-scanner scan \
+            --path "${SCAN_PATHS}" \
+            --output-path "${OUTPUT_PATH}" \
+            --output-name "${OUTPUT_NAME}"
+          exit_code="$?"
+          if [ "${exit_code}" -gt "60" ] ; then
+            echo "::error title=Datadog IaC Scanner failure::DataDog IaC Scanner exited with code ${exit_code}"
+            exit "${exit_code}"
+          fi
+        )
+        echo "Done"
+        echo "OUTPUT_FILE=${OUTPUT_PATH}/${OUTPUT_NAME}" >> "${GITHUB_ENV}"
+
+    - name: Upload analysis results to Datadog
+      shell: bash
+      env:
+        DD_API_KEY: ${{ inputs.dd_api_key }}
+        DD_APP_KEY: ${{ inputs.dd_app_key }}
+        DD_SITE: ${{ inputs.dd_site }}
+      run: |
+        # Upload analysis results to Datadog
+        cd "${GITHUB_WORKSPACE}"
+        echo "Uploading analysis results to Datadog"
+        datadog-ci sarif upload "${OUTPUT_FILE}" --service datadog-static-analyzer --env ci
+        echo "Done"
