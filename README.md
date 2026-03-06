@@ -4,6 +4,8 @@ A GitHub action to run the [Datadog IaC Scanner] in your repository and upload t
 
 This action uses the [datadog-ci] standalone binary (installed via [install-datadog-ci-github-action]), so **no Node.js setup is required**.
 
+For more details, see the [Datadog IaC Security documentation].
+
 ## Usage
 
 ```yaml
@@ -47,8 +49,7 @@ jobs:
 | Name                    | Description                                                                                                          | Required | Default         |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------- | -------- | --------------- |
 | `dd_api_key`            | Your Datadog API key. This key is created by your [Datadog organization] and should be stored as a [secret].         | Yes      |                 |
-| `dd_api_key`            | Your Datadog application key. This key is created by your [Datadog organization] and should be stored as a [secret]. | Yes      |                 |
-| `dd_app_key`            | Datadog application key.                                                                                             | Yes      |                 |
+| `dd_app_key`            | Your Datadog application key. This key is created by your [Datadog organization] and should be stored as a [secret]. | Yes      |                 |
 | `dd_site`               | The [Datadog site] to upload the results to.                                                                         | No       | `datadoghq.com` |
 | `paths`                 | A comma-separated list of directories or files to scan.                                                              | No       | `.`             |
 | `extra_args`            | Extra arguments to be passed to the `datadog-iac-scanner scan` command.                                              | No       |                 |
@@ -69,6 +70,7 @@ Apache 2.0 - See [LICENSE](LICENSE) for details.
 [Datadog IaC Scanner]: https://github.com/DataDog/datadog-iac-scanner
 [datadog-ci]: https://github.com/DataDog/datadog-ci
 [install-datadog-ci-github-action]: https://github.com/DataDog/install-datadog-ci-github-action
+[Datadog IaC Security documentation]: https://docs.datadoghq.com/security/code_security/iac_security/
 [Datadog organization]: https://docs.datadoghq.com/account_management/api-app-keys/
 [secret]: https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository
 [Datadog site]: https://docs.datadoghq.com/getting_started/site/

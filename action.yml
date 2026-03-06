@@ -8,11 +8,9 @@ inputs:
   dd_api_key:
     description: "Your Datadog API key used to authenticate requests."
     required: true
-    default: ""
   dd_app_key:
     description: "Your Datadog Application key used to authenticate requests."
     required: true
-    default: ""
   dd_site:
     description: "The Datadog site. For example, users in the EU may want to set datadoghq.eu."
     required: false
@@ -74,9 +72,11 @@ runs:
           echo "::error title=Unsupported platform::this action does not support ${{ runner.os }}/${{ runner.arch }}"
           exit 1
         fi
-        echo "DDIS_ARCH=${DDIS_ARCH}" >> "${GITHUB_ENV}"
-        echo "DDIS_OS=${DDIS_OS}" >> "${GITHUB_ENV}"
-        echo "DDIS_SUFFIX=${DDIS_SUFFIX}" >> "${GITHUB_ENV}"
+        {
+          echo "DDIS_ARCH=${DDIS_ARCH}"
+          echo "DDIS_OS=${DDIS_OS}"
+          echo "DDIS_SUFFIX=${DDIS_SUFFIX}"
+        } >> "${GITHUB_ENV}"
 
         mkdir -p "${HOME}/.local/bin"
         echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
@@ -98,7 +98,7 @@ runs:
           echo "Downloading from ${url}"
           tmpdir="$(mktemp -d)"
           filename="${tmpdir}/datadog-iac-scanner${suffix}"
-          curl -fsSL --retry 5 ${url} -o "${filename}"
+          curl -fsSL --retry 5 "${url}" -o "${filename}"
           if [ "${DDIS_SUFFIX}" = "zip" ] ; then
             unzip -q "${filename}" -d "${HOME}/.local/bin"
           else
@@ -124,7 +124,7 @@ runs:
         echo "Starting IaC Scan"
         (
           set +e
-          # shellcheck disable=SC2086 -- intentional: $EXTRA_ARGS is unquoted to allow multiple values
+          # shellcheck disable=SC2086 # intentional: $EXTRA_ARGS is unquoted to allow multiple values
           datadog-iac-scanner scan \
             --path "${SCAN_PATHS}" \
             --output-path "${OUTPUT_PATH}" \
@@ -150,6 +150,6 @@ runs:
         # Upload analysis results to Datadog
         cd "${GITHUB_WORKSPACE}"
         echo "Uploading analysis results to Datadog"
-        # shellcheck disable=SC2086 -- intentional: $EXTRA_ARGS is unquoted to allow multiple values
-        datadog-ci sarif upload "${OUTPUT_FILE}" --service datadog-static-analyzer --env ci $EXTRA_ARGS
+        # shellcheck disable=SC2086 # intentional: $EXTRA_ARGS is unquoted to allow multiple values
+        datadog-ci sarif upload "${OUTPUT_FILE}" --service datadog-iac-scanner --env ci $EXTRA_ARGS
         echo "Done"

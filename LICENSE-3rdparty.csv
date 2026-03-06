@@ -1,4 +1,4 @@
 Component,Origin,License,Copyright
 datadog-ci,https://github.com/DataDog/datadog-ci,Apache-2.0,"Copyright 2020-present Datadog, Inc."
-datadog-iac-scanner,https://github.com/DataDog/datadog-iac-scanner,Apache-2.0,"Copyright [2024-Present] Datadog, Inc"
+datadog-iac-scanner,https://github.com/DataDog/datadog-iac-scanner,Apache-2.0,"Copyright 2024-Present Datadog, Inc"
 install-datadog-ci-github-action,https://github.com/DataDog/install-datadog-ci-github-action,Apache-2.0,"Copyright 2024-present Datadog, Inc."
