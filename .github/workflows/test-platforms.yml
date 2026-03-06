@@ -1,0 +1,37 @@
+name: Test platforms
+
+on: [push]
+
+jobs:
+  test-platforms:
+    name: Test on ${{ matrix.target }}
+    runs-on: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Add a commit
+        shell: bash
+        run: |
+          git config --global user.name "User"
+          git config --global user.email "user@example.com"
+          # (A dummy commit is added so a new commit hash is always uploaded to Datadog)
+          git commit -m "Commit" --allow-empty
+
+      - name: Run action
+        uses: ./
+        with:
+          dd_api_key: dummy-api-key
+          dd_app_key: dummy-app-key
+          datadog_ci_extra_args: --dry-run
