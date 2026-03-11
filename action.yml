@@ -92,9 +92,8 @@ runs:
         # Install datadog-iac-scanner
         TIMEFORMAT='Installed datadog-iac-scanner in %1Rs'
         time {
-          release_url="https://api.github.com/repos/DataDog/datadog-iac-scanner/releases/latest"
           suffix="_${DDIS_OS}_${DDIS_ARCH}.${DDIS_SUFFIX}"
-          url="$( curl -fsSL --retry 5 "${release_url}" | jq -r ".assets[] | select(.name | endswith(\"${suffix}\")).browser_download_url" )"
+          url="https://github.com/DataDog/datadog-iac-scanner/releases/latest/download/datadog-iac-scanner${suffix}"
           echo "Downloading from ${url}"
           tmpdir="$(mktemp -d)"
           filename="${tmpdir}/datadog-iac-scanner${suffix}"
