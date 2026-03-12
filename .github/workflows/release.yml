@@ -31,7 +31,7 @@ jobs:
       - uses: DataDog/dd-octo-sts-action@acaa02eee7e3bb0839e4272dacb37b8f3b58ba80 # v1.0.3
         id: octo-sts
         with:
-          scope: DataDog/coverage-upload-github-action
+          scope: DataDog/datadog-iac-scanner-github-action
           policy: self.release.update-major-tag
       - name: Update major version tag
         run: |
