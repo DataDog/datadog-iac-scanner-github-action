@@ -5,7 +5,7 @@ subject_pattern: "repo:DataDog/datadog-iac-scanner-github-action:ref:refs/tags/v
 claim_pattern:
   event_name: "push"
   ref: refs/tags/v.*
-  job_workflow_ref: DataDog/datadog-iac-scanner-github-action/\.github/workflows/release\.yaml@refs/tags/v.*
+  job_workflow_ref: DataDog/datadog-iac-scanner-github-action/\.github/workflows/release\.yml@refs/tags/v.*
 
 permissions:
   contents: write
