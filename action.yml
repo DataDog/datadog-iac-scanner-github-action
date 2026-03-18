@@ -135,7 +135,7 @@ runs:
             --output-name "${OUTPUT_NAME}" \
             $EXTRA_ARGS
           exit_code="$?"
-          if [ "${exit_code}" -gt "60" ] ; then
+          if [ "${exit_code}" -lt "20" -o "${exit_code}" -gt "60" ] ; then
             echo "::error title=Datadog IaC Scanner failure::DataDog IaC Scanner exited with code ${exit_code}"
             exit "${exit_code}"
           fi
